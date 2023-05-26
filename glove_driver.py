@@ -94,11 +94,11 @@ class ImuDriver:
                 sensor_name = self.names[ID] + "-Pose"
 
                 '''TMP CONTIENE UNA STRINGA CON TIMESTAMP, ORIENTAZIONE (X,Y,Z,W), ACCELERAZIONI (X,Y,Z) E MAGNETOMETRO (X,Y,Z) SEPARATE DA VIRGOLA'''
-                tmp = (str(msg2.header.stamp) + "," + 
-                    str(msg2.pose.orientation.x) + "," + str(msg2.pose.orientation.y) + "," + str(msg2.pose.orientation.z) + "," + str(msg2.pose.orientation.w) + "," + 
-                    str(msg2.linear_acceleration.x) + "," + str(msg2.linear_acceleration.y) + "," + str(msg2.linear_acceleration.z) + "," +
-                    str(msg2.angular_velocity.x) + "," + str(msg2.angular_velocity.y) + "," + str(msg2.angular_velocity.z) + "," +
-                    str(msg2.magnetometer.x) + "," + str(msg2.magnetometer.y) + "," + str(msg2.magnetometer.z) + "\n")
+                tmp = (str(imu.time) + "," + 
+                    str(imu.orientation.x) + "," + str(imu.orientation.y) + "," + str(imu.orientation.z) + "," + str(imu.orientation.w) + "," + 
+                    str(imu.accelerometer.x) + "," + str(imu.accelerometer.y) + "," + str(imu.accelerometer.z) + "," +
+                    str(imu.gyroscope.x) + "," + str(imu.gyroscope.y) + "," + str(imu.gyroscope.z) + "," +
+                    str(imu.magnetometer.x) + "," + str(imu.magnetometer.y) + "," + str(imu.magnetometer.z) + "\n")
 
                 '''QUI BISOGNA INSERIRE LA STAMPA SU FILE DELLA STRINGA TMP CHE CONTIENE TUTTE LE INFORMAZIONI CHE CI SERVONO'''
                 
