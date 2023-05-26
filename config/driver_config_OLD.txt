@@ -1,0 +1,16 @@
+0 thumb_inter_right_
+1 thumb_prox_right_
+10 index_inter_
+11 index_prox_
+20 ring_inter_
+21 ring_prox_
+30 middle_inter_
+31 middle_prox_
+100 thumb2_prox_
+101 back_
+110 pinkie_inter_ 
+111 pinkie_prox_
+120 wrist_
+121 wrist_
+130 back_
+131 thumb_meta_left_
