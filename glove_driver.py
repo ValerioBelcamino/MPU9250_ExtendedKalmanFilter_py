@@ -9,52 +9,22 @@ import time
 import numpy as np
 import math
 import quaternionic
-from filterpy.kalman import ExtendedKalmanFilter
+from kalmanFilter import ExtendedKalmanFilter
 
 
 def computeRPY(acc, mag):
     roll = math.atan2(acc[1], acc[2])
-    pitch = math.atan2(-acc[0], math.sqrt(acc[1]*acc[1] + acc[2]*acc[2]))
-    yaw = math.atan2(mag[2]*math.sin(pitch)-mag[1]*math.cos(pitch), 
-    mag[0]*math.cos(roll)+mag[1]*math.sin(roll)*math.sin(pitch)*mag[2]*math.sin(roll)*math.cos(pitch))
+    # pitch = math.atan2(-acc[0], math.sqrt(acc[1]*acc[1] + acc[2]*acc[2]))
+    pitch = math.asin(acc[0]/ (math.sqrt(acc[1]*acc[1] + acc[2]*acc[2] + acc[0]*acc[0])))
+    yaw = math.atan2(mag[2]*math.sin(roll)-mag[1]*math.cos(roll), 
+    mag[0]*math.cos(pitch)+mag[1]*math.sin(roll)*math.sin(pitch)*mag[2]*math.sin(pitch)*math.cos(roll))
 
     # math.atan2(coorectedMag[2]*math.sin(pitch)-coorectedMag[1]*math.cos(pitch),
     #  coorectedMag[0]*math.cos(roll)+coorectedMag[1]*math.sin(roll)*math.sin(pitch)*coorectedMag[2]*math.sin(roll)*math.cos(pitch))
-    return roll, pitch, yaw
+    return roll, -pitch, yaw
 
-def F(quat, gyro, bias):
-    g = gyro
-    b = bias
-    q = quat
 
-    uno = -0.5*[ (g[0]-b[0])*q[1] + (g[1]-b[1])*q[2] + (g[2]-b[2])*q[3]]
-    due = -0.5*[ (g[0]-b[0])*q[0] + (g[1]-b[1])*q[3] + (g[2]-b[2])*q[2]]
-    tre = -0.5*[ (g[0]-b[0])*q[3] + (g[1]-b[1])*q[0] + (g[2]-b[2])*q[1]]
-    quattro = -0.5*[ (g[0]-b[0])*q[2] + (g[1]-b[1])*q[1] + (g[2]-b[2])*q[0]]
 
-    return np.array([uno, due, tre, quattro, 0, 0, 0])
-
-def H(quat):
-    q = quat
-
-    dTheta_dq0 = (2*q[3]^2*q[1] - 4*q[3]*q[0]*q[2] - 2*q[1]*(x^2 + q[1]^2 + q[2]^2))/(q[3]^4 + x^4 + 8*q[3]*q[0]*q[1]*q[2] + 2*x^2*(q[1]^2 - q[2]^2) + 2*q[3]^2*(q[0]^2 - q[1]^2 + q[2]^2) + (q[1]^2 + q[2]^2)^2)
-    dTheta_dq1 = (2*(q[3]^2*q[0] + 2*q[3]*q[1]*q[2] + q[0]*(q[0]^2 + q[1]^2 - q[2]^2)))/(q[3]^4 + q[0]^4 + 8*q[3]*q[0]*q[1]*q[2] + 2*q[0]^2 (q[1]^2 - q[2]^2) + 2*q[3]^2*(q[0]^2 - q[1]^2 + q[2]^2) + (q[1]^2 + q[2]^2)^2)
-    dTheta_dq2 = (2*(q[3]^3 + 2*q[0]*q[1]*q[2] + q[3]*(q[0]^2 - q[1]^2 + q[2]^2)))/(q[3]^4 + q[0]^4 + 8*q[3]*q[0]*q[1]*q[2] + 2*q[0]^2*(q[1]^2 - q[2]^2) + 2*q[3]^2*(q[0]^2 - q[1]^2 + q[2]^2) + (q[1]^2 + q[2]^2)^2)
-    dTheta_dq3 = (-2*(2*q[3]*q[0]*q[1] + q[3]^2*q[2] + q[2]*(-q[0]^2 + q[1]^2 + q[2]^2)))/(q[3]^4 + q[0]^4 + 8*q[3]*q[0]*q[1]*q[2] + 2*q[0]^2 (q[1]^2 - q[2]^2) + 2*q[3]^2*(q[0]^2 - q[1]^2 + q[2]^2) + (q[1]^2 + q[2]^2)^2)
-
-    dPhi_dq0 = (2*q[2])/math.sqrt[1 - 4 (q[3]*q[1] - q[0]*q[2])^2]
-    dPhi_dq1 = (-2*q[3])/math.sqrt[1 - 4 (q[3]*q[1] - q[0]*q[2])^2]
-    dPhi_dq2 = (2*q[0])/math.sqrt[1 - 4 (q[3]*q[1] - q[0]*q[2])^2]
-    dPhi_dq3 = (-2*q[1])/math.sqrt[1 - 4 (q[3]*q[1] - q[0]*q[2])^2]
-
-    dTheta_dq0 = (-2*(q[3]^3 + 2*q[0]*q[1]*q[2] + q[3]*(q[0]^2 - q[1]^2 + q[2]^2)))/(q[3]^4 + q[0]^4 + 8*q[3]*q[0]*q[1]*q[2] + 2*q[0]^2*(q[1]^2 - q[2]^2) + 2*q[3]^2*(q[0]^2 - q[1]^2 + q[2]^2) + (q[1]^2 + q[2]^2)^2)
-    dTheta_dq1 = (-2*(2*q[3]*q[0]*q[1] + q[3]^2*q[2] + q[2]*(-q[0]^2 + q[1]^2 + q[2]^2)))/(q[3]^4 + q[0]^4 + 8*q[3]*q[0]*q[1]*q[2] + 2*q[0]^2*(q[1]^2 - q[2]^2) + 2*q[3]^2*(q[0]^2 - q[1]^2 + q[2]^2) + (q[1]^2 + q[2]^2)^2)
-    dTheta_dq2 = (-2*q[3]^2*q[1] + 4*q[3]*q[0]*q[2] + 2*q[1]*(q[0]^2 + q[1]^2 + q[2]^2))/(q[3]^4 + q[0]^4 + 8*q[3]*q[0]*q[1]*q[2] + 2*q[0]^2*(q[1]^2 - q[2]^2) + 2*q[3]^2*(q[0]^2 - q[1]^2 + q[2]^2) + (q[1]^2 + q[2]^2)^2)
-    dTheta_dq3 = (2*(q[3]^2*q[0] + 2*q[3]*q[1]*q[2] + q[0]*(q[0]^2 + q[1]^2 - q[2]^2)))/(q[3]^4 + q[0]^4 + 8*q[3]*q[0]*q[1]*q[2] + 2*q[0]^2*(q[1]^2 - q[2]^2) + 2*q[3]^2*(q[0]^2 - q[1]^2 + q[2]^2) + (q[1]^2 + q[2]^2)^2)
-
-    return np.array([[dTheta_dq0, dTheta_dq1, dTheta_dq2, dTheta_dq3,0,0,0],
-                    [dPhi_dq0, dPhi_dq1, dPhi_dq2, dPhi_dq3,0,0,0], 
-                    [dPsi_dq0, dPsi_dq1, dPsi_dq2, dPsi_dq3,0,0,0]])
 
 def mag2acc_frame(vector3):
     vector3=vector3.reshape(3,1)
@@ -100,6 +70,13 @@ class ImuDriver:
         sock.bind((self.udp_ip, self.udp_port))
         sock.settimeout(10)
 
+        self.ekf = ExtendedKalmanFilter(P=np.eye(7) * 0.1, Q = np.eye(7) * 0.00001, R = np.eye(4) * 0.001)
+        self.g_bias = np.array([-1,-1,-1]) * math.pi/180
+
+        x = None
+
+
+        old_time = time.time()
         while True:
             try:
                 data = sock.recv(29+6)  # (29) # buffer size is 1024 bytes
@@ -174,7 +151,7 @@ class ImuDriver:
                 # elif  self.msgCounter > 30:
                 #     print(self.connectedIMUs, end='\r')
 
-
+                gyro = np.array([imu.gyroscope.x, imu.gyroscope.y, imu.gyroscope.z]) * math.pi/180
                 mag = np.array([imu.magnetometer.x, imu.magnetometer.y, imu.magnetometer.z])
                 acc = np.array([imu.accelerometer.x, imu.accelerometer.y, imu.accelerometer.z])
                 correctedMag = mag2acc_frame( correctMagnetometer(mag))
@@ -186,8 +163,19 @@ class ImuDriver:
                 # yaw = yaw * 180 / math.pi
                 # print(f"roll: {roll:0.3f}, pitch: {pitch:0.3f}, yaw: {yaw:0.3f}")
 
-                quat = quaternionic.array.from_euler_angles(roll, pitch, yaw)
-                print(f"quat: {quat.w:.2f}, {quat.x:.2f}, {quat.y:.2f}, {quat.z:.2f}")
+                quat = quaternionic.array.from_euler_angles(roll, pitch, yaw).ndarray
+                if x is None:
+                    x = np.array([quat[0], quat[1], quat[2], quat[3], self.g_bias[0], self.g_bias[1], self.g_bias[2]])
+                    self.ekf.x = x
+                
+                x = self.ekf.predict(gyro, time.time()-old_time)
+                
+                # x = self.ekf.update(np.array([roll,pitch,yaw]))
+                x = self.ekf.update(np.array([quat[0], quat[1], quat[2], quat[3]]))
+                print(f"quat: {x[0]:.3f}, {x[1]:.3f}, {x[2]:.3f}, {x[3]:.3f}")
+                old_time = time.time()
+                # print(f"quat: {quat.w:.2f}, {quat.x:.2f}, {quat.y:.2f}, {quat.z:.2f}")
+                # print(f'gyro: {gyro[0]}, {gyro[1]}, {gyro[2]}')
 
 
 '''QUI SI ISTANZIA IL NODO ROS CHE NON CI SERVE PIÙ E SI LEGGONO I PARAMETRI PASSATI DA LINEA DI COMANDO (X ES. LA PORTA SU CUI APRIRE IL SOCKET)'''
